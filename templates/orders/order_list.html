@@ -1,0 +1,78 @@
+{% extends "base/base.html" %}
+
+{% block title %}Заказы — Магазин электрозапчастей{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-bag-check"></i> Заказы</h1>
+    {% if user_role == 'client' or user_role == 'admin' %}
+        <a href="{% url 'orders:order_create' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Создать заказ
+        </a>
+    {% endif %}
+</div>
+
+{% if orders %}
+<div class="table-responsive">
+    <table class="table table-bordered table-hover">
+        <thead class="table-primary">
+            <tr>
+                <th>#</th>
+                {% if user_role == 'manager' or user_role == 'admin' %}
+                    <th>Клиент</th>
+                {% endif %}
+                <th>Товар</th>
+                <th>Кол-во</th>
+                <th>Сумма</th>
+                <th>Статус</th>
+                <th>Дата</th>
+                {% if user_role == 'manager' or user_role == 'admin' %}
+                    <th>Действия</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.pk }}</td>
+                {% if user_role == 'manager' or user_role == 'admin' %}
+                    <td>{{ order.client.get_full_name|default:order.client.username }}</td>
+                {% endif %}
+                <td>{{ order.product.name }}</td>
+                <td>{{ order.quantity }} {{ order.product.unit.abbreviation }}</td>
+                <td>{{ order.total_price|floatformat:2 }} ₽</td>
+                <td>
+                    {% if order.status == 'new' %}
+                        <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                    {% elif order.status == 'processing' %}
+                        <span class="badge bg-warning text-dark">{{ order.get_status_display }}</span>
+                    {% elif order.status == 'completed' %}
+                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                {% if user_role == 'manager' or user_role == 'admin' %}
+                    <td>
+                        <a href="{% url 'orders:order_update' order.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if user_role == 'admin' %}
+                            <a href="{% url 'orders:order_delete' order.pk %}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        {% endif %}
+                    </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Заказов пока нет.
+</div>
+{% endif %}
+{% endblock %}
